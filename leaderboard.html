@@ -10,28 +10,26 @@ body{
   background:#f2f2f2;
   padding:20px;
 }
+
 .container{
-  max-width:600px;
+  max-width:700px;
   margin:auto;
   background:#fff;
   padding:20px;
   border-radius:10px;
-}
-h1{text-align:center;}
-
-.item{
-  padding:12px;
-  border-bottom:1px solid #ddd;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
 
-.rank{
-  font-weight:bold;
-  font-size:18px;
+h1{
+  text-align:center;
 }
 
-.top1{background:#fff3cd;}
-.top2{background:#e2e3e5;}
-.top3{background:#f8d7da;}
+iframe{
+  width:100%;
+  height:500px;
+  border:none;
+  border-radius:10px;
+}
 </style>
 
 </head>
@@ -40,37 +38,12 @@ h1{text-align:center;}
 
 <div class="container">
   <h1>🏆 Leaderboard</h1>
-  <div id="list"></div>
+
+  <iframe 
+    src="https://script.google.com/macros/s/AKfycbyl0qDVqN76bSG56H9-qjiHE46cXsXwtl8mM3K8BCU67FzngwV_Wns94FMsAqCAokll/exec">
+  </iframe>
+
 </div>
-
-<script>
-
-fetch("https://script.google.com/macros/s/AKfycbyl0qDVqN76bSG56H9-qjiHE46cXsXwtl8mM3K8BCU67FzngwV_Wns94FMsAqCAokll/exec")
-  .then(res => res.json())
-  .then(data => {
-
-    let html = "";
-
-    data.slice(0,10).forEach((u,i)=>{
-
-      let cls = "";
-      if(i==0) cls="top1";
-      else if(i==1) cls="top2";
-      else if(i==2) cls="top3";
-
-      html += `
-        <div class="item ${cls}">
-          <span class="rank">${i+1}. ${u.name}</span><br>
-          Score: ${u.score} / 12 <br>
-          Time: ${u.time} sec
-        </div>
-      `;
-    });
-
-    document.getElementById("list").innerHTML = html;
-  });
-
-</script>
 
 </body>
 </html>
