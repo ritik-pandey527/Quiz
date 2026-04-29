@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>मराठी साहित्य क्विझ</title>
+
+<style>
+body{
+  font-family:Mangal, Arial, sans-serif;
+  background:#f2f2f2;
+  padding:10px;
+}
+.container{
+  background:#fff;
+  max-width:700px;
+  margin:auto;
+  padding:20px;
+  border-radius:10px;
+}
+h1,h2{text-align:center;}
+
+input[type="text"]{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  margin-bottom:15px;
+}
+button{
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  background:#0078d4;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  margin-top:10px;
+}
+.hidden{display:none;}
+
+#timer{
+  text-align:right;
+  color:red;
+  font-weight:bold;
+}
+
+#quiz{
+  background-image:url('question-bg.jpg');
+  background-size:cover;
+  padding:20px;
+  border-radius:10px;
+}
+.question{
+  font-size:18px;
+  margin-bottom:10px;
+  white-space:pre-line;
+}
+.options label{
+  display:block;
+  padding:8px;
+  background:#ffffffcc;
+  margin-bottom:8px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+#answerSheet{
+  margin-top:20px;
+  padding:15px;
+  background:#eef;
+  border-radius:8px;
+}
+
+.certificate{
+  margin-top:20px;
+  padding:40px;
+  border:3px solid #333;
+  background-image:url('certificate-bg.jpg');
+  background-size:cover;
+  text-align:center;
+  color:red;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>मराठी साहित्य क्विझ</h1>
+
+<div id="nameSection">
+  <input type="text" id="userName" placeholder="आपले पूर्ण नाव लिहा">
+  <button onclick="startQuiz()">Quiz Start करा</button>
+</div>
+
+<div id="quiz" class="hidden">
+  <div id="timer">वेळ : 15</div>
+  <div id="question" class="question"></div>
+  <div id="options" class="options"></div>
+  <button onclick="nextQuestion()">Next</button>
+</div>
+
+<div id="result" class="hidden"></div>
+<div id="answerSheet" class="hidden"></div>
+<div id="certificate" class="hidden certificate"></div>
+
+</div>
+
+<script>
+
+let startTime;
+let answersLog = [];
+let questionStartTime;
+
+let questions = [
+ {q:"इंदिरा संत यांनी स्त्रीवादी कविता कोणत्या दशकात लिहिल्या?", options:["1940","1950","1960","1970"], ans:1},
+ {q:"मराठी राजभाषा दिन कोणी जन्मदिवस म्हणून साजरा होतो?", options:["कुसुमाग्रज","खांडेकर","भट","अत्रे"], ans:0},
+ {q:"मंगेश पाडगावकर यांची सर्वाधिक लोकप्रिय कविता कोणत्या विषयावर?", options:["देशभक्ती","प्रेम","निसर्ग","धार्मिक"], ans:1},
+ {q:"‘गझलसम्राट’ कोण?", options:["भट","बोरकर","बापट","महानोर"], ans:0},
+ {q:"‘एकच प्याला’ नाटकाचे लेखक कोण?", options:["गोविंदाग्रज","अत्रे","कोल्हटकर","माडगूळकर"], ans:0},
+ {q:"मराठी विनोदपीठाचे आद्य कुलगुरू?", options:["अत्रे","कोल्हटकर","महानोर","भट"], ans:1},
+ {q:"‘गगन सदन तेजोमय’ कोणी लिहिले?", options:["बापट","पाडगावकर","भट","माडगूळकर"], ans:0},
+ {q:"‘कऱ्हेचे पाणी’ आत्मचरित्र कोणाचे?", options:["अत्रे","कुसुमाग्रज","बोरकर","भट"], ans:0},
+ {q:"‘जैत रे जैत’साठी गीते कोणी लिहिली?", options:["महानोर","भट","बोरकर","पाडगावकर"], ans:0},
+ {q:"‘आधुनिक वाल्मिकी’ कोण?", options:["माडगूळकर","कुसुमाग्रज","महानोर","बोरकर"], ans:0},
+ {q:"‘आनंदयात्री’ कवी कोण?", options:["बोरकर","संत","अत्रे","भट"], ans:0},
+ {q:"डिसेंबर महिन्याचे साहित्यिक?", options:["मर्ढेकर","बोरकर","महानोर","भट"], ans:0}
+];
+
+let index = 0, score = 0, time = 15, timer;
+let userName = "";
+
+let nameSection = document.getElementById("nameSection");
+let quiz = document.getElementById("quiz");
+let question = document.getElementById("question");
+let options = document.getElementById("options");
+let result = document.getElementById("result");
+let certificate = document.getElementById("certificate");
+let answerSheet = document.getElementById("answerSheet");
+
+function startQuiz(){
+  userName = document.getElementById("userName").value.trim();
+  if(!userName){ alert("कृपया नाव लिहा"); return; }
+
+  startTime = Date.now();
+
+  questions.sort(() => Math.random() - 0.5);
+
+  nameSection.classList.add("hidden");
+  quiz.classList.remove("hidden");
+
+  loadQuestion();
+}
+
+function loadQuestion(){
+
+  if(index >= questions.length){
+    finishQuiz();
+    return;
+  }
+
+  questionStartTime = Date.now();
+
+  clearInterval(timer);
+
+  time = 15;
+  document.getElementById("timer").innerText = "वेळ : " + time;
+
+  timer = setInterval(()=>{
+    time--;
+    document.getElementById("timer").innerText = "वेळ : " + time;
+
+    if(time === 0){
+      clearInterval(timer);
+      alert("वेळ संपली!");
+      autoNext();
+    }
+  },1000);
+
+  question.innerText = (index+1) + " / " + questions.length + "\n\n" + questions[index].q;
+
+  options.innerHTML = "";
+
+  questions[index].options.forEach((o,i)=>{
+    options.innerHTML += `
+      <label>
+        <input type="radio" name="opt" value="${i}">
+        ${o}
+      </label>`;
+  });
+}
+
+function nextQuestion(){
+
+  let sel = document.querySelector("input[name='opt']:checked");
+
+  if(!sel){
+    alert("कृपया उत्तर निवडा");
+    return; // ❗ timer keeps running
+  }
+
+  clearInterval(timer); // ✅ stop only after selection
+
+  let timeTaken = Math.floor((Date.now() - questionStartTime)/1000);
+
+  let selectedText = questions[index].options[sel.value];
+  let correctText = questions[index].options[questions[index].ans];
+  let isCorrect = parseInt(sel.value) === questions[index].ans;
+
+  answersLog.push({
+    question: questions[index].q,
+    selected: selectedText,
+    correct: correctText,
+    result: isCorrect ? "Correct" : "Wrong",
+    timeTaken: timeTaken
+  });
+
+  if(isCorrect){
+    score++;
+  }
+
+  index++;
+  loadQuestion();
+}
+
+function autoNext(){
+
+  answersLog.push({
+  question: questions[index].q,
+  selected: "Time Out",
+  correct: questions[index].options[questions[index].ans],
+  result: "Wrong",
+  timeTaken: 15
+});
+
+  index++;
+  loadQuestion();
+}
+
+function finishQuiz(){
+
+  let totalTimeSec = Math.floor((Date.now() - startTime)/1000);
+let minutes = Math.floor(totalTimeSec / 60);
+let seconds = totalTimeSec % 60;
+
+  quiz.classList.add("hidden");
+  result.classList.remove("hidden");
+
+result.innerHTML = `
+  <h2>${userName} यांचा Score : ${score}/12</h2>
+  <p>⏱ Total Time: ${minutes} min ${seconds} sec</p>
+
+  <button onclick="openLeaderboard()">🏆 Leaderboard</button>
+`;
+
+  sendToGoogleSheet(totalTimeSec);
+
+  showCorrectAnswers();
+
+  if(score >= 8){
+    showCertificate();
+  }
+}
+
+function showCorrectAnswers(){
+
+  answerSheet.classList.remove("hidden");
+
+  let html = "<h2>📊 Your Answers Report</h2>";
+
+  answersLog.forEach((a,i)=>{
+
+    let color = a.result === "Correct" ? "green" : "red";
+
+    html += `
+      <p>
+        <b>${i+1}. ${a.question}</b><br>
+        👉 Your Answer: <span style="color:${color}">${a.selected}</span><br>
+        ✅ Correct Answer: ${a.correct}<br>
+        📌 Result: ${a.result}<br>
+        ⏱ Time: ${a.timeTaken}s
+      </p>
+    `;
+  });
+
+  answerSheet.innerHTML = html;
+}
+
+function showCertificate(){
+
+  certificate.classList.remove("hidden");
+
+  certificate.innerHTML = `
+    <h2>🎓 सन्मानपत्र 🎓</h2>
+    <p>'साहित्य संवेदना' आयोजित ऑनलाईन प्रश्नमंजुषा स्पर्धेत विशेष नैपुण्य मिळवल्याबद्दल,</p>
+    <h3>${userName}</h3>
+    <p>यांना हे सन्मान पत्र प्रदान करण्यात येत आहे.</p>
+    <p><b>Score : ${score}/12</b></p>
+    <button onclick="window.print()">Download Certificate</button>
+  `;
+}
+
+function sendToGoogleSheet(totalTime){
+
+  fetch("https://script.google.com/macros/s/AKfycbyl0qDVqN76bSG56H9-qjiHE46cXsXwtl8mM3K8BCU67FzngwV_Wns94FMsAqCAokll/exec", {
+    method: "POST",
+    body: JSON.stringify({
+      name: userName,
+      score: score,
+      totalTime: totalTime,
+      answers: answersLog
+    })
+  })
+  .then(res => res.text())
+  .then(data => console.log("Saved:", data))
+  .catch(err => console.error(err));
+}
+
+function openLeaderboard(){
+  window.open("https://script.google.com/macros/s/AKfycbyl0qDVqN76bSG56H9-qjiHE46cXsXwtl8mM3K8BCU67FzngwV_Wns94FMsAqCAokll/exec");
+}
+
+</script>
+
+</body>
+</html>
